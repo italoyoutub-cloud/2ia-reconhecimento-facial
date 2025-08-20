@@ -14,7 +14,7 @@ import Reports from './components/Reports';
 import LoginPage from './components/LoginPage';
 import { detectorConfigs } from './services/humanService';
 import ManageAllStudents from './components/ManageAllStudents';
-import { supabase, isSupabaseConfigured } from './services/supabase';
+// Supabase removido - usando dados locais
 import Spinner from './components/common/Spinner';
 
 type View = 'dashboard' | 'live' | 'schools' | 'students' | 'reports' | 'settings';
@@ -31,104 +31,94 @@ const MainApp: React.FC = () => {
     const [recognitionHistory, setRecognitionHistory] = useState<RecognitionEvent[]>([]);
 
     const fetchData = useCallback(async () => {
-        // Login desativado - carregando todos os dados sem filtro
+        // Dados mock locais - sem Supabase
         setLoading(true);
         try {
-            // Carregar todos os dados sem filtro de usuário
-            const { data: schoolsData, error: schoolsError } = await supabase
-                .from('schools')
-                .select('*')
-                .order('name');
-            if (schoolsError) throw schoolsError;
-            setSchools(schoolsData || []);
+            // Dados mock para escolas
+            const mockSchools: School[] = [
+                { id: '1', name: 'Escola Municipal João Silva', address: 'Rua das Flores, 123', created_at: new Date().toISOString() },
+                { id: '2', name: 'Colégio Estadual Maria Santos', address: 'Av. Principal, 456', created_at: new Date().toISOString() }
+            ];
+            setSchools(mockSchools);
             
-            const { data: studentsData, error: studentsError } = await supabase
-                .from('students')
-                .select('*')
-                .order('name');
-            if (studentsError) throw studentsError;
-            setStudents(studentsData || []);
+            // Dados mock para estudantes
+            const mockStudents: Student[] = [
+                { id: '1', name: 'Ana Silva', school_id: '1', face_encoding: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+                { id: '2', name: 'João Santos', school_id: '1', face_encoding: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+                { id: '3', name: 'Maria Oliveira', school_id: '2', face_encoding: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+            ];
+            setStudents(mockStudents);
             
-            const { data: historyData, error: historyError } = await supabase
-                .from('recognition_events')
-                .select('*')
-                .order('timestamp', { ascending: false })
-                .limit(500);
-            if (historyError) throw historyError;
-            setRecognitionHistory(historyData || []);
+            // Dados mock para histórico de reconhecimento
+            const mockHistory: RecognitionEvent[] = [];
+            setRecognitionHistory(mockHistory);
             
         } catch (error) {
-            console.error("Failed to load data from Supabase", error);
+            console.error("Failed to load mock data", error);
         } finally {
             setLoading(false);
         }
     }, []);
     
     useEffect(() => {
-        if (isSupabaseConfigured) {
-            fetchData();
-        } else {
-            setLoading(false);
-        }
-    }, [fetchData, isSupabaseConfigured]);
+        fetchData();
+    }, [fetchData]);
 
 
-    const addSchool = useCallback(async (school: Omit<School, 'id' | 'user_id'>) => {
-        const { data, error } = await supabase.from('schools').insert(school).select();
-        if (error) { console.error(error); throw error; }
-        if (data) setSchools(prev => [...prev, data[0]]);
+    const addSchool = useCallback(async (school: Omit<School, 'id'>) => {
+        const newSchool: School = {
+            ...school,
+            id: Date.now().toString(),
+            created_at: new Date().toISOString()
+        };
+        setSchools(prev => [...prev, newSchool]);
     }, []);
     
-    const updateSchool = useCallback(async (schoolId: string, schoolData: { name: string }) => {
-        const { data, error } = await supabase.from('schools').update(schoolData).eq('id', schoolId).select();
-        if (error) { console.error(error); throw error; }
-        if (data) setSchools(prev => prev.map(s => s.id === schoolId ? data[0] : s));
+    const updateSchool = useCallback(async (schoolId: string, schoolData: { name: string; address?: string }) => {
+        setSchools(prev => prev.map(s => s.id === schoolId ? { ...s, ...schoolData } : s));
     }, []);
 
     const deleteSchool = useCallback(async (schoolId: string) => {
-        // Supabase cascade delete will handle associated students
-        const { error } = await supabase.from('schools').delete().eq('id', schoolId);
-        if (error) { console.error(error); throw error; }
         setSchools(prev => prev.filter(s => s.id !== schoolId));
-        setStudents(prev => prev.filter(s => s.schoolId !== schoolId)); // also update local state
+        setStudents(prev => prev.filter(s => s.school_id !== schoolId));
     }, []);
     
     const addStudent = useCallback(async (student: Omit<Student, 'id'>) => {
-        const { data, error } = await supabase.from('students').insert(student).select();
-        if (error) { console.error(error); throw error; }
-        if (data) setStudents(prev => [...prev, data[0]]);
+        const newStudent: Student = {
+            ...student,
+            id: Date.now().toString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+        setStudents(prev => [...prev, newStudent]);
     }, []);
 
-    const updateStudent = useCallback(async (studentId: string, studentData: { name: string; turma: string }) => {
-        const { data, error } = await supabase.from('students').update(studentData).eq('id', studentId).select();
-        if (error) { console.error(error); throw error; }
-        if (data) setStudents(prev => prev.map(s => s.id === studentId ? data[0] : s));
+    const updateStudent = useCallback(async (studentId: string, studentData: { name?: string; school_id?: string; face_encoding?: string }) => {
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, ...studentData, updated_at: new Date().toISOString() } : s));
     }, []);
 
     const deleteStudent = useCallback(async (studentId: string) => {
-        const { error } = await supabase.from('students').delete().eq('id', studentId);
-        if (error) { console.error(error); throw error; }
         setStudents(prev => prev.filter(s => s.id !== studentId));
     }, []);
     
     const handleRecognition = useCallback(async (student: Student) => {
         const lastRecognitionForStudent = recognitionHistory
-            .filter(e => e.studentId === student.id)
-            .sort((a, b) => b.timestamp - a.timestamp)[0];
+            .filter(e => e.student_id === student.id)
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
-        if (lastRecognitionForStudent && (Date.now() - lastRecognitionForStudent.timestamp < 30000)) {
+        if (lastRecognitionForStudent && (Date.now() - new Date(lastRecognitionForStudent.timestamp).getTime() < 30000)) {
             return;
         }
 
-        const newEvent = {
-            studentId: student.id,
-            schoolId: student.schoolId,
-            timestamp: new Date().toISOString()
+        const newEvent: RecognitionEvent = {
+            id: Date.now().toString(),
+            student_id: student.id,
+            school_id: student.school_id,
+            timestamp: new Date().toISOString(),
+            confidence: 0.95
         };
         
-        const { data, error } = await supabase.from('recognition_events').insert(newEvent).select();
-        if (error) { console.error('Failed to log recognition:', error); return; }
-        if (data) setRecognitionHistory(prev => [data[0], ...prev].slice(0, 500));
+        setRecognitionHistory(prev => [newEvent, ...prev].slice(0, 500));
 
     }, [recognitionHistory]);
 
@@ -175,12 +165,7 @@ const MainApp: React.FC = () => {
         }
     }
 
-    if (!isSupabaseConfigured) {
-        // The error message is already rendered by supabase.ts,
-        // so we can just render a minimal component or null here to prevent
-        // the rest of the app logic from running.
-        return null;
-    }
+    // Supabase removido - aplicação funciona sem banco de dados
 
     // Login desativado - indo direto para o dashboard
     // if (authLoading) {

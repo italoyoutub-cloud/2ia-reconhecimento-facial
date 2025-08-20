@@ -18,12 +18,10 @@ const NavLink: React.FC<{
 }> = ({ icon, label, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md text-left transition-colors duration-200 ${
-            isActive ? 'bg-orange-600 dark:bg-orange-700 text-white' : 'text-neutral-300 dark:text-gray-300 hover:bg-neutral-700 dark:hover:bg-gray-600 hover:text-white'
-        }`}
+        className={`nav-link ${isActive ? 'nav-link-active' : ''}`}
     >
         {icon}
-        <span className="font-semibold">{label}</span>
+        <span className="nav-link-label">{label}</span>
     </button>
 );
 
@@ -34,15 +32,15 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onSetView, userRole = 'o
     const canAccessSettings = userRole === 'admin';
 
     return (
-        <aside className="w-64 bg-neutral-800 dark:bg-gray-900 text-white p-4 flex flex-col flex-shrink-0 transition-colors duration-200">
-            <div className="px-2 mb-8">
+        <aside className="sidebar">
+            <div className="sidebar-logo">
                 <Logo />
             </div>
 
-            <nav className="flex-grow flex flex-col">
+            <nav className="sidebar-nav">
                 <div>
-                    <h3 className="px-4 text-sm font-semibold text-neutral-400 dark:text-gray-400 uppercase tracking-wider mb-2">Análise</h3>
-                    <div className="space-y-2">
+                    <h3 className="nav-section-title">Análise</h3>
+                    <div className="nav-section">
                         <NavLink 
                             label="Dashboard" 
                             isActive={currentView === 'dashboard'} 
@@ -65,9 +63,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onSetView, userRole = 'o
                         )}
                     </div>
                 </div>
-                 <div className="mt-6">
-                    <h3 className="px-4 text-sm font-semibold text-neutral-400 dark:text-gray-400 uppercase tracking-wider mb-2">Gerenciamento</h3>
-                     <div className="space-y-2">
+                 <div className="nav-section-group">
+                    <h3 className="nav-section-title">Gerenciamento</h3>
+                     <div className="nav-section">
                         {canAccessSchools && (
                             <NavLink 
                                 label="Escolas" 
@@ -85,9 +83,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onSetView, userRole = 'o
                     </div>
                 </div>
                 {canAccessSettings && (
-                    <div className="mt-6">
-                        <h3 className="px-4 text-sm font-semibold text-neutral-400 dark:text-gray-400 uppercase tracking-wider mb-2">Sistema</h3>
-                        <div className="space-y-2">
+                    <div className="nav-section-group">
+                        <h3 className="nav-section-title">Sistema</h3>
+                        <div className="nav-section">
                             <NavLink 
                                 label="Configurações" 
                                 isActive={currentView === 'settings'} 
