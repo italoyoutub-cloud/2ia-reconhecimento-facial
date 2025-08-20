@@ -1,0 +1,7 @@
+{
+  "name": "2ia Reconhecimento Facial",
+  "description": "Um sistema web para reconhecimento facial e gerenciamento de alunos, utilizando a biblioteca Human.js e estilizado com a identidade visual da 2ia.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
